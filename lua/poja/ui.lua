@@ -62,7 +62,7 @@ local function parse_fields_from_buffer(lines)
         break
       end
 
-      if brace_depth <= 1 then
+      if brace_depth < 1 then
         break
       end
 
