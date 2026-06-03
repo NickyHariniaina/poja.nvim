@@ -1,0 +1,56 @@
+*poja-nvim.txt*  Poja code generation for Neovim
+
+==============================================================================
+INTRODUCTION                                    *poja-intro*
+
+poja.nvim is a Neovim plugin for generating and editing Java code in
+Poja-generated projects (https://poja.io). It provides project detection,
+layered file scaffolding, and a visual field editor.
+
+==============================================================================
+COMMANDS                                        *poja-commands*
+
+:PojaApplication                               *:PojaApplication*
+  Show the path to the PojaApplication.java class in the current project.
+  Reports "Not a Poja project" if none is found.
+
+:PojaCreate                                     *:PojaCreate*
+  Interactively create a Poja-pattern Java file. Prompts for:
+    1. File type (Entity, Controller, Service, Repository, Mapper, Event,
+       Event Handler, DAO, Validator, Exception, DTO)
+    2. Class name
+  Files are written to the correct subdirectory under src/main/java/ using
+  templates matching HEI Admin API conventions.
+
+:PojaCreateAttribute                            *:PojaCreateAttribute*
+  Open a floating window to edit entity fields. The window shows each field
+  in the format:
+    name:Type:@Annotation1 @Annotation2(...)
+  Edit freely, then :w to write changes back to the source file.
+
+==============================================================================
+CONFIGURATION                                   *poja-config*
+
+The plugin can be configured by calling setup() with an options table:
+
+    require("poja").setup({
+      detect = { enabled = true },
+      creator = { enabled = true },
+      ui = { enabled = true },
+    })
+
+All options default to true. No configuration is required for basic usage.
+
+==============================================================================
+HEALTH                                         *poja-health*
+
+Run :checkhealth poja to verify:
+  - Poja project detection
+  - Template loading
+  - Field parser module
+  - Command registration
+
+==============================================================================
+AUTHOR                                          *poja-author*
+
+poja.nvim is distributed under the MIT license.
