@@ -327,10 +327,4 @@ function M.create_interactive()
   end)
 end
 
-function M.setup(opts)
-  vim.api.nvim_create_user_command("PojaCreate", function()
-    M.create_interactive()
-  end, { desc = "Create a Poja-pattern Java file" })
-end
-
 return M
