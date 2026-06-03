@@ -244,7 +244,7 @@ function M.edit_fields()
             break
           end
 
-          if brace_depth <= 1 and line:match("}") then
+          if brace_depth < 1 and line:match("}") then
             field_end = i - 1
             break
           end
