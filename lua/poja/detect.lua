@@ -20,7 +20,7 @@ local function find_poja_app()
 end
 
 function M.setup(opts)
-  if opts.detect.enabled then
+  if opts and opts.detect and opts.detect.enabled then
     find_poja_app()
   end
 end

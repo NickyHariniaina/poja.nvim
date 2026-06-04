@@ -4,12 +4,6 @@ M.defaults = {
   detect = {
     enabled = true,
   },
-  creator = {
-    enabled = true,
-  },
-  ui = {
-    enabled = true,
-  },
 }
 
 M.options = {}
