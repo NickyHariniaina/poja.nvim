@@ -33,3 +33,22 @@ end, { desc = "Add service method via prompts" })
 vim.api.nvim_create_user_command("PojaCreateFlywayEnumMigration", function()
   require("poja.ui.enum_migration").start()
 end, { desc = "Create Flyway migration for enum in current buffer" })
+
+vim.api.nvim_create_user_command("PojaFormat", function()
+  local detect = require("poja.detect")
+  if not detect.is_poja_project() then
+    vim.notify("poja: not a Poja project", vim.log.levels.ERROR)
+    return
+  end
+  local root = detect.get_poja_app_path():match("(.+)src/main/java/")
+  if not root then
+    vim.notify("poja: could not determine project root", vim.log.levels.ERROR)
+    return
+  end
+  local result = vim.fn.system(root .. "format.sh")
+  if vim.v.shell_error == 0 then
+    vim.notify("poja: format.sh completed", vim.log.levels.INFO)
+  else
+    vim.notify("poja: format.sh failed:\n" .. result, vim.log.levels.ERROR)
+  end
+end, { desc = "Run format.sh in project root" })

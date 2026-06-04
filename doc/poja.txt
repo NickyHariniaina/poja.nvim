@@ -71,6 +71,11 @@ COMMANDS                                        *poja-commands*
     3. Method signature and body are inserted before the closing brace
   Imports (List, Transactional, NotFoundException) are added automatically.
 
+:PojaFormat                                     *:PojaFormat*
+  Run format.sh in the project root. Detects the project root via
+  PojaApplication.java and executes the formatting script.
+  Notifies success or shows error output on failure.
+
 :PojaCreateFlywayEnumMigration                  *:PojaCreateFlywayEnumMigration*
   Create a Flyway SQL migration for a Java enum in the current buffer.
   The enum type name and values are auto-detected from the source code.
