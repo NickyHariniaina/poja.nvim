@@ -25,3 +25,7 @@ end, { desc = "Add entity FK relationship via prompts" })
 vim.api.nvim_create_user_command("PojaCreateRepositoryMethod", function()
   require("poja.ui.repository").start()
 end, { desc = "Add repository query method via prompts" })
+
+vim.api.nvim_create_user_command("PojaCreateFlywayEnumMigration", function()
+  require("poja.ui.enum_migration").start()
+end, { desc = "Create Flyway migration for enum in current buffer" })

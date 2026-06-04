@@ -61,6 +61,15 @@ COMMANDS                                        *poja-commands*
          inverse)
      Missing imports (including the target entity) are automatically added.
 
+:PojaCreateFlywayEnumMigration                  *:PojaCreateFlywayEnumMigration*
+  Create a Flyway SQL migration for a Java enum in the current buffer.
+  The enum type name and values are auto-detected from the source code.
+  The migration file is written to src/main/resources/db/migration/ and
+  versioned after the highest existing migration. Inner enums (e.g.,
+  User.Status) produce a composite name (user_status) in SQL. The
+  generated file uses the guarded DO $$ IF NOT EXISTS pattern for
+  idempotent deployment.
+
 :PojaCreateRepositoryMethod                     *:PojaCreateRepositoryMethod*
   Add a query method to a repository interface. Invoke from a repository
   file; the entity type is auto-detected from the JpaRepository
