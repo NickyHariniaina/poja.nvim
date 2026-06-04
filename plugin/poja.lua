@@ -21,3 +21,7 @@ end, { desc = "Add entity fields via prompts" })
 vim.api.nvim_create_user_command("PojaCreateFK", function()
   require("poja.ui.fk").start()
 end, { desc = "Add entity FK relationship via prompts" })
+
+vim.api.nvim_create_user_command("PojaCreateRepositoryMethod", function()
+  require("poja.ui.repository").start()
+end, { desc = "Add repository query method via prompts" })
