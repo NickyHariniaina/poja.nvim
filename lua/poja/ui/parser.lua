@@ -137,17 +137,25 @@ function M.field_block_to_code(field, indent)
 end
 
 M.annotation_presets = {
-  { key = "notnull",  label = "NotNull",  annotation = "@NotNull",  has_params = false },
-  { key = "notblank", label = "NotBlank", annotation = "@NotBlank", has_params = false },
-  { key = "notempty", label = "NotEmpty", annotation = "@NotEmpty", has_params = false },
-  { key = "size",     label = "Size",     annotation = "@Size",     has_params = true,
+  { key = "notnull",  label = "NotNull",  annotation = "@NotNull",
+    import = "jakarta.validation.constraints.NotNull",  has_params = false },
+  { key = "notblank", label = "NotBlank", annotation = "@NotBlank",
+    import = "jakarta.validation.constraints.NotBlank", has_params = false },
+  { key = "notempty", label = "NotEmpty", annotation = "@NotEmpty",
+    import = "jakarta.validation.constraints.NotEmpty", has_params = false },
+  { key = "size",     label = "Size",     annotation = "@Size",
+    import = "jakarta.validation.constraints.Size", has_params = true,
     param_defs = { min = "0", max = "255" } },
-  { key = "min",      label = "Min",      annotation = "@Min",      has_params = true,
+  { key = "min",      label = "Min",      annotation = "@Min",
+    import = "jakarta.validation.constraints.Min", has_params = true,
     param_defs = { value = "0" } },
-  { key = "max",      label = "Max",      annotation = "@Max",      has_params = true,
+  { key = "max",      label = "Max",      annotation = "@Max",
+    import = "jakarta.validation.constraints.Max", has_params = true,
     param_defs = { value = "0" } },
-  { key = "email",    label = "Email",    annotation = "@Email",    has_params = false },
-  { key = "pattern",  label = "Pattern",  annotation = "@Pattern",  has_params = true,
+  { key = "email",    label = "Email",    annotation = "@Email",
+    import = "jakarta.validation.constraints.Email", has_params = false },
+  { key = "pattern",  label = "Pattern",  annotation = "@Pattern",
+    import = "jakarta.validation.constraints.Pattern", has_params = true,
     param_defs = { regexp = "" } },
 }
 
