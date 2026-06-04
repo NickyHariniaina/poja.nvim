@@ -79,14 +79,14 @@ local function total_lines(num_fields)
   return 2 + num_fields * block_lines()
 end
 
-local function field_start_line(fi)
-  return 2 + (fi - 1) * block_lines()
+local function field_header_line(fi)
+  return 3 + (fi - 1) * block_lines()
 end
 
 local function field_preset_line(fi, pi)
-  local start = field_start_line(fi) + 1
+  local hdr = field_header_line(fi)
   local row = math.floor((pi - 1) / PRESETS_PER_ROW)
-  return start + row
+  return hdr + 1 + row
 end
 
 local function field_preset_col(pi)
@@ -95,7 +95,7 @@ end
 
 local function render_form(state)
   local lines = {}
-  table.insert(lines, "# Poja Fields          Tab: toggle  v: params  :w save  q: close")
+  table.insert(lines, "# Poja Fields    a:add  Space: toggle  v: params  :w save  q: close")
   table.insert(lines, "#")
   for fi, field in ipairs(state.fields) do
     table.insert(lines, "# " .. field.name .. " : " .. field.type)
@@ -117,52 +117,83 @@ local function render_form(state)
   return lines
 end
 
-local function move_cursor(form_win, state)
+local function refresh_buf(bufnr)
+  local state = vim.b[bufnr].poja_state
+  vim.bo[bufnr].modifiable = true
+  local lines = render_form(state)
+  vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
+  vim.bo[bufnr].modifiable = false
+  M.move_cursor(bufnr)
+end
+
+function M.move_cursor(bufnr)
+  local state = vim.b[bufnr].poja_state
+  local win = state._win
+  if not win or not vim.api.nvim_win_is_valid(win) then return end
   local line = field_preset_line(state.current_field, state.current_preset)
   local col = field_preset_col(state.current_preset)
-  vim.api.nvim_win_set_cursor(form_win, { line, col })
+  pcall(vim.api.nvim_win_set_cursor, win, { line, col })
 end
 
-local function refresh_buf(form_buf, form_win, state)
-  vim.bo[form_buf].modifiable = true
-  local lines = render_form(state)
-  vim.api.nvim_buf_set_lines(form_buf, 0, -1, false, lines)
-  vim.bo[form_buf].modifiable = false
-  move_cursor(form_win, state)
-end
-
-local function toggle_current(form_buf, form_win, state)
-  local fi = state.current_field
-  local preset = presets[state.current_preset]
-  local key = preset.key
-  state.checks[fi][key] = not state.checks[fi][key]
-  if not state.checks[fi][key] then
-    state.params[fi][key] = nil
+function M._j(buf)
+  local s = vim.b[buf].poja_state
+  if s.current_field < #s.fields then
+    s.current_field = s.current_field + 1
+    M.move_cursor(buf)
   end
-  refresh_buf(form_buf, form_win, state)
 end
 
-local function edit_params_current(form_buf, form_win, state)
-  local fi = state.current_field
-  local preset = presets[state.current_preset]
+function M._k(buf)
+  local s = vim.b[buf].poja_state
+  if s.current_field > 1 then
+    s.current_field = s.current_field - 1
+    M.move_cursor(buf)
+  end
+end
+
+function M._h(buf)
+  local s = vim.b[buf].poja_state
+  if s.current_preset > 1 then
+    s.current_preset = s.current_preset - 1
+    M.move_cursor(buf)
+  end
+end
+
+function M._l(buf)
+  local s = vim.b[buf].poja_state
+  if s.current_preset < #presets then
+    s.current_preset = s.current_preset + 1
+    M.move_cursor(buf)
+  end
+end
+
+function M._toggle(buf)
+  local s = vim.b[buf].poja_state
+  local key = presets[s.current_preset].key
+  s.checks[s.current_field][key] = not s.checks[s.current_field][key]
+  if not s.checks[s.current_field][key] then
+    s.params[s.current_field][key] = nil
+  end
+  refresh_buf(buf)
+end
+
+function M._params(buf)
+  local s = vim.b[buf].poja_state
+  local preset = presets[s.current_preset]
   if not preset.has_params then
     vim.notify("poja: " .. preset.label .. " has no parameters", vim.log.levels.INFO)
     return
   end
-  state.checks[fi][preset.key] = true
-  if not state.params[fi][preset.key] then
-    state.params[fi][preset.key] = vim.deepcopy(preset.param_defs)
+  local fi = s.current_field
+  s.checks[fi][preset.key] = true
+  if not s.params[fi][preset.key] then
+    s.params[fi][preset.key] = vim.deepcopy(preset.param_defs)
   end
-  local current = state.params[fi][preset.key]
-  local input_parts = {}
-  for k, default in pairs(preset.param_defs) do
-    local val = current[k] or default
-    table.insert(input_parts, k .. "=" .. val)
-  end
-  vim.ui.input({ prompt = preset.label .. " (" .. table.concat(input_parts, ", ") .. "): " }, function(input)
+  local current = s.params[fi][preset.key]
+  vim.ui.input({ prompt = preset.label .. " (enter params, e.g. min=0,max=255): " }, function(input)
     if not input or input == "" then
-      state.checks[fi][preset.key] = false
-      state.params[fi][preset.key] = nil
+      s.checks[fi][preset.key] = false
+      s.params[fi][preset.key] = nil
     else
       for k, _ in pairs(preset.param_defs) do
         local val = input:match(k .. "%s*=%s*([^, ]+)")
@@ -171,20 +202,42 @@ local function edit_params_current(form_buf, form_win, state)
         end
       end
     end
-    refresh_buf(form_buf, form_win, state)
+    refresh_buf(buf)
   end)
 end
 
-local function save_fields(form_buf, form_win, state, target_bufnr)
+function M._add_field(buf)
+  local s = vim.b[buf].poja_state
+  vim.ui.input({ prompt = "Field name: " }, function(name)
+    if not name or name == "" then return end
+    vim.ui.input({ prompt = "Field type (e.g. String, Integer): " }, function(typ)
+      if not typ or typ == "" then return end
+      local fi = #s.fields + 1
+      table.insert(s.fields, { name = name, type = typ, annotations = {} })
+      s.checks[fi] = {}
+      s.params[fi] = {}
+      s.extras[fi] = {}
+      s.current_field = fi
+      s.current_preset = 1
+      refresh_buf(buf)
+    end)
+  end)
+end
+
+local function save_fields(bufnr)
+  local s = vim.b[bufnr].poja_state
+  local target_bufnr = s._target
+  local form_win = s._win
+
   local new_fields = {}
-  for fi, field in ipairs(state.fields) do
+  for fi, field in ipairs(s.fields) do
     local annotations = {}
-    for _, annot in ipairs(state.extras[fi]) do
+    for _, annot in ipairs(s.extras[fi]) do
       table.insert(annotations, annot)
     end
     for pi, preset in ipairs(presets) do
-      if state.checks[fi][preset.key] then
-        local vals = state.params[fi][preset.key]
+      if s.checks[fi][preset.key] then
+        local vals = s.params[fi][preset.key]
         table.insert(annotations, parser.preset_to_annotation(preset, vals))
       end
     end
@@ -248,57 +301,41 @@ local function save_fields(form_buf, form_win, state, target_bufnr)
   end
 
   vim.api.nvim_buf_set_lines(target_bufnr, field_start - 1, field_end, false, new_lines)
-  vim.api.nvim_buf_set_option(form_buf, "modified", false)
-  vim.api.nvim_win_close(form_win, true)
+  if form_win and vim.api.nvim_win_is_valid(form_win) then
+    vim.api.nvim_win_close(form_win, true)
+  end
   vim.notify("poja: fields updated", vim.log.levels.INFO)
 end
 
-local function setup_keymaps(form_buf, form_win, state)
-  local opts = { buffer = form_buf, nowait = true, silent = true, noremap = true }
+local function setup_keymaps(form_buf, form_win)
+  local opts = { silent = true, nowait = true }
 
-  vim.keymap.set("n", "j", function()
-    if state.current_field < #state.fields then
-      state.current_field = state.current_field + 1
-      state.current_preset = math.min(state.current_preset, #presets)
-      move_cursor(form_win, state)
-    end
-  end, opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "j",
+    "<cmd>lua require('poja.ui')._j(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "k",
+    "<cmd>lua require('poja.ui')._k(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "h",
+    "<cmd>lua require('poja.ui')._h(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "l",
+    "<cmd>lua require('poja.ui')._l(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "<Space>",
+    "<cmd>lua require('poja.ui')._toggle(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "<CR>",
+    "<cmd>lua require('poja.ui')._toggle(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "v",
+    "<cmd>lua require('poja.ui')._params(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "a",
+    "<cmd>lua require('poja.ui')._add_field(" .. form_buf .. ")<CR>", opts)
+  vim.api.nvim_buf_set_keymap(form_buf, "n", "q",
+    "<cmd>close<CR>", opts)
 
-  vim.keymap.set("n", "k", function()
-    if state.current_field > 1 then
-      state.current_field = state.current_field - 1
-      state.current_preset = math.min(state.current_preset, #presets)
-      move_cursor(form_win, state)
-    end
-  end, opts)
-
-  vim.keymap.set("n", "l", function()
-    if state.current_preset < #presets then
-      state.current_preset = state.current_preset + 1
-      move_cursor(form_win, state)
-    end
-  end, opts)
-
-  vim.keymap.set("n", "h", function()
-    if state.current_preset > 1 then
-      state.current_preset = state.current_preset - 1
-      move_cursor(form_win, state)
-    end
-  end, opts)
-
-  vim.keymap.set("n", "<Space>", function()
-    toggle_current(form_buf, form_win, state)
-  end, opts)
-
-  vim.keymap.set("n", "<CR>", function()
-    toggle_current(form_buf, form_win, state)
-  end, opts)
-
-  vim.keymap.set("n", "v", function()
-    edit_params_current(form_buf, form_win, state)
-  end, opts)
-
-  vim.keymap.set("n", "q", ":close<CR>", opts)
+  vim.api.nvim_create_autocmd("BufWriteCmd", {
+    buffer = form_buf,
+    once = true,
+    callback = function()
+      save_fields(form_buf)
+    end,
+  })
 end
 
 function M.edit_fields()
@@ -363,16 +400,12 @@ function M.edit_fields()
   local form_win = vim.api.nvim_open_win(form_buf, true, win_opts)
   vim.api.nvim_win_set_option(form_win, "cursorline", true)
 
-  move_cursor(form_win, state)
-  setup_keymaps(form_buf, form_win, state)
+  state._win = form_win
+  state._target = bufnr
+  vim.b[form_buf].poja_state = state
 
-  vim.api.nvim_create_autocmd("BufWriteCmd", {
-    buffer = form_buf,
-    once = true,
-    callback = function()
-      save_fields(form_buf, form_win, state, bufnr)
-    end,
-  })
+  M.move_cursor(form_buf)
+  setup_keymaps(form_buf, form_win)
 end
 
 return M
