@@ -110,7 +110,9 @@ local function insert_field(name, typ, annotations, import_keys)
   return true
 end
 
-local function prompt_params(name, typ, pi, annots, import_keys, preset, param_keys, idx, collected)
+local prompt_params, prompt_annotations
+
+prompt_params = function(name, typ, pi, annots, import_keys, preset, param_keys, idx, collected)
   if idx > #param_keys then
     local params = {}
     for _, k in ipairs(param_keys) do
@@ -141,7 +143,7 @@ local function prompt_params(name, typ, pi, annots, import_keys, preset, param_k
   end)
 end
 
-local function prompt_annotations(name, typ, pi, annots, import_keys)
+prompt_annotations = function(name, typ, pi, annots, import_keys)
   if pi > #presets then
     local ok = insert_field(name, typ, annots, import_keys)
     if ok then
