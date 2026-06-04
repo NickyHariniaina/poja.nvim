@@ -110,6 +110,37 @@ local function insert_field(name, typ, annotations, import_keys)
   return true
 end
 
+local function prompt_params(name, typ, pi, annots, import_keys, preset, param_keys, idx, collected)
+  if idx > #param_keys then
+    local params = {}
+    for _, k in ipairs(param_keys) do
+      local val = collected[k]
+      if val and val ~= "" then
+        params[k] = val
+      end
+    end
+    table.insert(annots, parser.preset_to_annotation(preset, params))
+    table.insert(import_keys, preset.key)
+    prompt_annotations(name, typ, pi + 1, annots, import_keys)
+    return
+  end
+
+  local k = param_keys[idx]
+  local default = preset.param_defs[k]
+  local prompt_text = k
+  if default and default ~= "" then
+    prompt_text = prompt_text .. " (" .. default .. ")"
+  end
+  prompt_text = prompt_text .. ": "
+
+  vim.ui.input({ prompt = prompt_text }, function(input)
+    if input and input ~= "" then
+      collected[k] = input
+    end
+    prompt_params(name, typ, pi, annots, import_keys, preset, param_keys, idx + 1, collected)
+  end)
+end
+
 local function prompt_annotations(name, typ, pi, annots, import_keys)
   if pi > #presets then
     local ok = insert_field(name, typ, annots, import_keys)
@@ -127,22 +158,12 @@ local function prompt_annotations(name, typ, pi, annots, import_keys)
   vim.ui.input({ prompt = "@" .. preset.label .. "? (y/n): " }, function(input)
     if input and input:lower():sub(1, 1) == "y" then
       if preset.has_params then
-        local parts = {}
-        for k, v in pairs(preset.param_defs) do
-          table.insert(parts, k .. "=" .. v)
+        local param_keys = {}
+        for k, _ in pairs(preset.param_defs) do
+          table.insert(param_keys, k)
         end
-        vim.ui.input({ prompt = preset.label .. " (" .. table.concat(parts, ",") .. "): " }, function(params_input)
-          local params = {}
-          if params_input and params_input ~= "" then
-            for pair in params_input:gmatch("[^,]+") do
-              local k, v = pair:match("^%s*(%w+)%s*=%s*(.-)%s*$")
-              if k and v then params[k] = v end
-            end
-          end
-          table.insert(annots, parser.preset_to_annotation(preset, params))
-          table.insert(import_keys, preset.key)
-          prompt_annotations(name, typ, pi + 1, annots, import_keys)
-        end)
+        table.sort(param_keys)
+        prompt_params(name, typ, pi, annots, import_keys, preset, param_keys, 1, {})
       else
         table.insert(annots, preset.annotation)
         table.insert(import_keys, preset.key)
