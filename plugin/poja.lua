@@ -17,3 +17,7 @@ end, { desc = "Create a Poja-pattern Java file" })
 vim.api.nvim_create_user_command("PojaCreateAttribute", function()
   require("poja.ui").edit_fields()
 end, { desc = "Add entity fields via prompts" })
+
+vim.api.nvim_create_user_command("PojaCreateFK", function()
+  require("poja.ui.fk").start()
+end, { desc = "Add entity FK relationship via prompts" })

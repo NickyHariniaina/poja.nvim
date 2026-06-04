@@ -24,6 +24,10 @@ function M.setup(opts)
     vim.api.nvim_create_user_command("PojaCreateAttribute", function()
       require("poja.ui").edit_fields()
     end, { desc = "Edit entity fields in a floating window" })
+
+    vim.api.nvim_create_user_command("PojaCreateFK", function()
+      require("poja.ui.fk").start()
+    end, { desc = "Add entity FK relationship via prompts" })
   end
 end
 
