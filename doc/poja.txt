@@ -23,13 +23,12 @@ COMMANDS                                        *poja-commands*
   templates matching HEI Admin API conventions.
 
 :PojaCreateAttribute                            *:PojaCreateAttribute*
-  Open a floating window with checkbox controls to edit entity field
-  annotations. Navigate fields with j/k, move between annotation presets
-  with h/l, toggle with Space or Enter, edit preset parameters with v,
-  save with :w, and close with q. Available presets:
-
-    NotNull  NotBlank  NotEmpty  Size(min,max)
-    Min      Max       Email     Pattern(regexp)
+  Add entity fields via interactive prompts. Prompts for field name and
+  type, then asks y/n for each annotation preset (NotNull, NotBlank,
+  NotEmpty, Size, Min, Max, Email, Pattern). Press y to add, n to skip.
+  For presets with parameters (Size, Min, Max, Pattern), another prompt
+  appears on yes for parameter values. After inserting, asks to add
+  another field.
 
 ==============================================================================
 CONFIGURATION                                   *poja-config*

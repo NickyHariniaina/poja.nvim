@@ -16,4 +16,4 @@ end, { desc = "Create a Poja-pattern Java file" })
 
 vim.api.nvim_create_user_command("PojaCreateAttribute", function()
   require("poja.ui").edit_fields()
-end, { desc = "Edit entity fields in a floating window" })
+end, { desc = "Add entity fields via prompts" })
