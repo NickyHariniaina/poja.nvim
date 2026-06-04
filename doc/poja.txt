@@ -61,6 +61,13 @@ COMMANDS                                        *poja-commands*
          inverse)
      Missing imports (including the target entity) are automatically added.
 
+:PojaCreateEndpoint                             *:PojaCreateEndpoint*
+  Add a REST endpoint to a controller. Prompts for method name, HTTP
+  method (GET/POST/PUT/DELETE/PATCH), endpoint path, return type, and
+  parameters (PathVariable, RequestParam, RequestBody, RequestPart with
+  required/default options). Generates annotations, signature, and
+  body (return "";) with auto-imports.
+
 :PojaCreateServiceMethod                        *:PojaCreateServiceMethod*
   Add a CRUD method to a Service class. Invoke from a service file;
   the entity is auto-detected from the repository field declaration.
