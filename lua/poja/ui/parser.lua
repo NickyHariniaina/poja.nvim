@@ -180,6 +180,10 @@ M.annotation_presets = {
     param_defs = { min = "0", max = "255" } },
   { key = "tostringexclude",  label = "ToString.Exclude",
     annotation = "@ToString.Exclude", has_params = false },
+  { key = "updatetimestamp",  label = "UpdateTimestamp",
+    annotation = "@UpdateTimestamp",
+    import = "org.hibernate.annotations.UpdateTimestamp",
+    has_params = false },
 }
 
 function M.match_annotation_to_preset(annot_str)
