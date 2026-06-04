@@ -130,38 +130,56 @@ end
 function M.field_block_to_code(field, indent)
   local lines = {}
   for _, a in ipairs(field.annotations) do
-    table.insert(lines, indent .. a)
+    for line in a:gmatch("[^\n]+") do
+      table.insert(lines, indent .. line)
+    end
   end
   table.insert(lines, indent .. "private " .. field.type .. " " .. field.name .. ";")
   return lines
 end
 
 M.annotation_presets = {
-  { key = "notnull",  label = "NotNull",  annotation = "@NotNull",
-    import = "jakarta.validation.constraints.NotNull",  has_params = false },
-  { key = "notblank", label = "NotBlank", annotation = "@NotBlank",
-    import = "jakarta.validation.constraints.NotBlank", has_params = false },
-  { key = "notempty", label = "NotEmpty", annotation = "@NotEmpty",
-    import = "jakarta.validation.constraints.NotEmpty", has_params = false },
-  { key = "size",     label = "Size",     annotation = "@Size",
-    import = "jakarta.validation.constraints.Size", has_params = true,
-    param_defs = { min = "0", max = "255" } },
-  { key = "min",      label = "Min",      annotation = "@Min",
-    import = "jakarta.validation.constraints.Min", has_params = true,
-    param_defs = { value = "0" } },
-  { key = "max",      label = "Max",      annotation = "@Max",
-    import = "jakarta.validation.constraints.Max", has_params = true,
-    param_defs = { value = "0" } },
+  { key = "builderdefault",    label = "Builder.Default",
+    annotation = "@Builder.Default", has_params = false },
   { key = "column",   label = "Column",   annotation = "@Column",
     import = "jakarta.persistence.Column", has_params = true,
     param_defs = { name = "", nullable = "", unique = "",
                    length = "255", insertable = "", updatable = "" },
     string_params = { name = true } },
+  { key = "creationtimestamp", label = "CreationTimestamp",
+    annotation = "@CreationTimestamp",
+    import = "org.hibernate.annotations.CreationTimestamp",
+    has_params = false },
   { key = "email",    label = "Email",    annotation = "@Email",
     import = "jakarta.validation.constraints.Email", has_params = false },
+  { key = "enumerated",        label = "Enumerated",
+    annotation = "@Enumerated(EnumType.STRING)\n@JdbcTypeCode(SqlTypes.NAMED_ENUM)",
+    import = "jakarta.persistence.EnumType",
+    extra_imports = { "org.hibernate.annotations.JdbcTypeCode",
+                      "org.hibernate.type.SqlTypes" },
+    has_params = false },
+  { key = "equalsandhashexclude", label = "EqualsAndHashCode.Exclude",
+    annotation = "@EqualsAndHashCode.Exclude", has_params = false },
+  { key = "max",      label = "Max",      annotation = "@Max",
+    import = "jakarta.validation.constraints.Max", has_params = true,
+    param_defs = { value = "0" } },
+  { key = "min",      label = "Min",      annotation = "@Min",
+    import = "jakarta.validation.constraints.Min", has_params = true,
+    param_defs = { value = "0" } },
+  { key = "notblank", label = "NotBlank", annotation = "@NotBlank",
+    import = "jakarta.validation.constraints.NotBlank", has_params = false },
+  { key = "notempty", label = "NotEmpty", annotation = "@NotEmpty",
+    import = "jakarta.validation.constraints.NotEmpty", has_params = false },
+  { key = "notnull",  label = "NotNull",  annotation = "@NotNull",
+    import = "jakarta.validation.constraints.NotNull",  has_params = false },
   { key = "pattern",  label = "Pattern",  annotation = "@Pattern",
     import = "jakarta.validation.constraints.Pattern", has_params = true,
     param_defs = { regexp = "" } },
+  { key = "size",     label = "Size",     annotation = "@Size",
+    import = "jakarta.validation.constraints.Size", has_params = true,
+    param_defs = { min = "0", max = "255" } },
+  { key = "tostringexclude",  label = "ToString.Exclude",
+    annotation = "@ToString.Exclude", has_params = false },
 }
 
 function M.match_annotation_to_preset(annot_str)

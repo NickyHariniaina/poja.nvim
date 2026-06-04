@@ -9,8 +9,15 @@ local function ensure_imports(bufnr, lines, import_keys)
   local needed = {}
   for _, key in ipairs(import_keys) do
     for _, preset in ipairs(presets) do
-      if preset.key == key and preset.import then
-        needed["import " .. preset.import .. ";"] = true
+      if preset.key == key then
+        if preset.import then
+          needed["import " .. preset.import .. ";"] = true
+        end
+        if preset.extra_imports then
+          for _, ei in ipairs(preset.extra_imports) do
+            needed["import " .. ei .. ";"] = true
+          end
+        end
         break
       end
     end
