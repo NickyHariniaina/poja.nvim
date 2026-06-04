@@ -61,6 +61,16 @@ COMMANDS                                        *poja-commands*
          inverse)
      Missing imports (including the target entity) are automatically added.
 
+:PojaCreateServiceMethod                        *:PojaCreateServiceMethod*
+  Add a CRUD method to a Service class. Invoke from a service file;
+  the entity is auto-detected from the repository field declaration.
+  Flow:
+    1. Method type: getById / findAll / saveAll / crupdate / deleteById /
+       getByField
+    2. For getByField: select field name (auto-detected from entity file)
+    3. Method signature and body are inserted before the closing brace
+  Imports (List, Transactional, NotFoundException) are added automatically.
+
 :PojaCreateFlywayEnumMigration                  *:PojaCreateFlywayEnumMigration*
   Create a Flyway SQL migration for a Java enum in the current buffer.
   The enum type name and values are auto-detected from the source code.

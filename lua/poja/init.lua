@@ -33,6 +33,10 @@ function M.setup(opts)
       require("poja.ui.repository").start()
     end, { desc = "Add repository query method via prompts" })
 
+    vim.api.nvim_create_user_command("PojaCreateServiceMethod", function()
+      require("poja.ui.service").start()
+    end, { desc = "Add service method via prompts" })
+
     vim.api.nvim_create_user_command("PojaCreateFlywayEnumMigration", function()
       require("poja.ui.enum_migration").start()
     end, { desc = "Create Flyway migration for enum in current buffer" })
