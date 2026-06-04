@@ -51,12 +51,39 @@ local function field_type_to_param(fields, field_name, entity_name)
   return nil, nil
 end
 
-local function make_return_type(prefix, entity_name)
-  if prefix == "findBy" then return "Optional<" .. entity_name .. ">" end
-  if prefix == "getBy" then return entity_name end
-  if prefix == "existsBy" then return "boolean" end
-  if prefix == "countBy" then return "long" end
-  if prefix == "deleteBy" then return "void" end
+local prefix_options = {
+  { key = "findBy",       returns = "Optional",  container = false },
+  { key = "findAllBy",    returns = "List",      container = true },
+  { key = "findDistinctBy", returns = "List",    container = true },
+  { key = "findFirstBy",  returns = "Optional",  container = false },
+  { key = "findTopBy",    returns = "Optional",  container = false },
+  { key = "getBy",        returns = "Entity",    container = false },
+  { key = "getAllBy",     returns = "List",      container = true },
+  { key = "readBy",       returns = "Optional",  container = false },
+  { key = "readAllBy",    returns = "List",      container = true },
+  { key = "queryBy",      returns = "Optional",  container = false },
+  { key = "queryAllBy",   returns = "List",      container = true },
+  { key = "searchBy",     returns = "Optional",  container = false },
+  { key = "searchAllBy",  returns = "List",      container = true },
+  { key = "streamBy",     returns = "Stream",    container = true },
+  { key = "streamAllBy",  returns = "Stream",    container = true },
+  { key = "existsBy",     returns = "boolean",   container = false },
+  { key = "countBy",      returns = "long",      container = false },
+  { key = "deleteBy",     returns = "void",      container = false },
+  { key = "removeBy",     returns = "void",      container = false },
+}
+
+local function make_return_type(prefix_key, entity_name)
+  for _, p in ipairs(prefix_options) do
+    if p.key == prefix_key then
+      local rt = p.returns
+      if rt == "Entity" then return entity_name end
+      if rt == "Optional" then return "Optional<" .. entity_name .. ">" end
+      if rt == "List" then return "List<" .. entity_name .. ">" end
+      if rt == "Stream" then return "Stream<" .. entity_name .. ">" end
+      return rt
+    end
+  end
   return entity_name
 end
 
@@ -148,9 +175,11 @@ local function insert_method(lines, method_sig, imports)
 end
 
 local function prompt_prefix(callback)
-  vim.ui.input({ prompt = "Prefix (findBy/getBy/existsBy/countBy/deleteBy) [findBy]: " }, function(input)
-    local prefix = (input and input ~= "") and input or "findBy"
-    callback(prefix)
+  vim.ui.select(prefix_options, {
+    prompt = "Select prefix:",
+    format_item = function(item) return item.key end,
+  }, function(choice)
+    callback(choice and choice.key or "findBy")
   end)
 end
 
@@ -171,16 +200,25 @@ local function prompt_more_fields(callback)
   end)
 end
 
-local function build_method(prefix, field_parts, fields, entity_name)
-  local method_name = make_method_name(prefix, field_parts)
-  local return_type = make_return_type(prefix, entity_name)
+local function build_method(prefix_key, field_parts, fields, entity_name)
+  local method_name = make_method_name(prefix_key, field_parts)
+  local return_type = make_return_type(prefix_key, entity_name)
   local param_str = make_param_str(field_parts, fields, entity_name)
 
   local method = return_type .. " " .. method_name .. "(" .. param_str .. ")"
 
   local imports = {}
-  if prefix == "findBy" then
-    table.insert(imports, "java.util.Optional")
+  for _, p in ipairs(prefix_options) do
+    if p.key == prefix_key then
+      if p.returns == "Optional" then
+        table.insert(imports, "java.util.Optional")
+      elseif p.returns == "List" then
+        table.insert(imports, "java.util.List")
+      elseif p.returns == "Stream" then
+        table.insert(imports, "java.util.stream.Stream")
+      end
+      break
+    end
   end
 
   return method, imports
@@ -229,23 +267,16 @@ function M.start()
   local entity_file = find_entity_file(entity_name)
   if entity_file then
     fields = entity_field_types(entity_file)
-    vim.notify("Found entity: " .. entity_name .. " (" .. #vim.tbl_keys(fields) .. " fields)", vim.log.levels.INFO)
+    local count = 0
+    for _, _ in pairs(fields) do count = count + 1 end
+    vim.notify("Found entity: " .. entity_name .. " (" .. count .. " fields)", vim.log.levels.INFO)
   else
     vim.notify("Entity file " .. entity_name .. ".java not found, using String for parameter types", vim.log.levels.WARN)
   end
 
-  -- Pre-populate field names for inline hints
-  local entity_fields = {}
-  for fname, ftype in pairs(fields) do
-    table.insert(entity_fields, fname .. ":" .. ftype)
-  end
-
-  prompt_prefix(function(prefix)
-    if prefix ~= "findBy" and prefix ~= "getBy" and prefix ~= "existsBy" and prefix ~= "countBy" and prefix ~= "deleteBy" then
-      vim.notify("poja: invalid prefix '" .. prefix .. "'", vim.log.levels.ERROR)
-      return
-    end
-    prompt_field_chain(prefix, fields, entity_name, {})
+  prompt_prefix(function(prefix_key)
+    if not prefix_key then return end
+    prompt_field_chain(prefix_key, fields, entity_name, {})
   end)
 end
 

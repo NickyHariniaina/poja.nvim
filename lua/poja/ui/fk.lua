@@ -1,5 +1,4 @@
 local parser = require("poja.ui.parser")
-local presets = parser.annotation_presets
 
 local M = {}
 
