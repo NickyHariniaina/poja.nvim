@@ -5,7 +5,8 @@ INTRODUCTION                                    *poja-intro*
 
 poja.nvim is a Neovim plugin for generating and editing Java code in
 Poja-generated projects (https://poja.io). It provides project detection,
-layered file scaffolding, and a visual field editor.
+layered file scaffolding, annotation-based entity field creation, and
+FK relationship generation matching HEI Admin API conventions.
 
 ==============================================================================
 COMMANDS                                        *poja-commands*
@@ -23,12 +24,42 @@ COMMANDS                                        *poja-commands*
   templates matching HEI Admin API conventions.
 
 :PojaCreateAttribute                            *:PojaCreateAttribute*
-  Add entity fields via interactive prompts. Prompts for field name and
-  type, then asks y/n for each annotation preset (NotNull, NotBlank,
-  NotEmpty, Size, Min, Max, Email, Pattern). Press y to add, n to skip.
-  For presets with parameters (Size, Min, Max, Pattern), another prompt
-  appears on yes for parameter values. After inserting, asks to add
-  another field.
+  Add entity fields via interactive prompts. Flow:
+    1. Field name and type
+    2. y/n for each annotation preset (in prompt order):
+       - @Builder.Default
+       - @Column (name, nullable, unique, length, insertable, updatable)
+       - @CreationTimestamp
+       - @Email
+       - @Enumerated (emits @Enumerated(EnumType.STRING) +
+         @JdbcTypeCode(SqlTypes.NAMED_ENUM))
+       - @EqualsAndHashCode.Exclude
+       - @Min (value)
+       - @Max (value)
+       - @NotBlank
+       - @NotEmpty
+       - @NotNull
+       - @Pattern (regexp)
+       - @Size (min, max)
+       - @ToString.Exclude
+       - @UpdateTimestamp
+  For presets with parameters, each parameter is prompted individually.
+  Press Enter to skip a parameter, type a value to include it. After
+  inserting the field, missing imports are automatically added.
+
+:PojaCreateFK                                   *:PojaCreateFK*
+  Add FK relationship fields via interactive prompts. Flow:
+    1. Related entity class name (project is searched for the file)
+    2. If not found, confirms whether to continue anyway
+    3. Relation type: ManyToOne / OneToOne / OneToMany / ManyToMany
+    4. Prompts depend on type:
+       - ManyToOne: field name, fetch (LAZY/EAGER), JoinColumn name,
+         nullable, updatable
+       - OneToOne: field name, JoinColumn name
+       - OneToMany: field name, mappedBy, fetch
+       - ManyToMany: field name, owning side (y/n), fetch, mappedBy (if
+         inverse)
+  Missing imports (including the target entity) are automatically added.
 
 ==============================================================================
 CONFIGURATION                                   *poja-config*
