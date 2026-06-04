@@ -155,7 +155,8 @@ M.annotation_presets = {
   { key = "column",   label = "Column",   annotation = "@Column",
     import = "jakarta.persistence.Column", has_params = true,
     param_defs = { name = "", nullable = "", unique = "",
-                   length = "255", insertable = "", updatable = "" } },
+                   length = "255", insertable = "", updatable = "" },
+    string_params = { name = true } },
   { key = "email",    label = "Email",    annotation = "@Email",
     import = "jakarta.validation.constraints.Email", has_params = false },
   { key = "pattern",  label = "Pattern",  annotation = "@Pattern",
@@ -188,8 +189,14 @@ function M.preset_to_annotation(preset, params)
   end
   local parts = {}
   for k, v in pairs(params) do
-    table.insert(parts, k .. " = " .. v)
+    if v ~= "" then
+      if preset.string_params and preset.string_params[k] then
+        v = '"\\"' .. v .. '"\\"'
+      end
+      table.insert(parts, k .. " = " .. v)
+    end
   end
+  if #parts == 0 then return preset.annotation end
   return preset.annotation .. "(" .. table.concat(parts, ", ") .. ")"
 end
 
