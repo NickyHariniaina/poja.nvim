@@ -136,4 +136,49 @@ function M.field_block_to_code(field, indent)
   return lines
 end
 
+M.annotation_presets = {
+  { key = "notnull",  label = "NotNull",  annotation = "@NotNull",  has_params = false },
+  { key = "notblank", label = "NotBlank", annotation = "@NotBlank", has_params = false },
+  { key = "notempty", label = "NotEmpty", annotation = "@NotEmpty", has_params = false },
+  { key = "size",     label = "Size",     annotation = "@Size",     has_params = true,
+    param_defs = { min = "0", max = "255" } },
+  { key = "min",      label = "Min",      annotation = "@Min",      has_params = true,
+    param_defs = { value = "0" } },
+  { key = "max",      label = "Max",      annotation = "@Max",      has_params = true,
+    param_defs = { value = "0" } },
+  { key = "email",    label = "Email",    annotation = "@Email",    has_params = false },
+  { key = "pattern",  label = "Pattern",  annotation = "@Pattern",  has_params = true,
+    param_defs = { regexp = "" } },
+}
+
+function M.match_annotation_to_preset(annot_str)
+  for _, preset in ipairs(M.annotation_presets) do
+    local rest = annot_str:match("^%s*@" .. preset.label .. "%s*(.*)$")
+    if rest then
+      local params = {}
+      if preset.has_params and rest ~= "" then
+        for k, _ in pairs(preset.param_defs) do
+          local val = rest:match(k .. "%s*=%s*([^,)]+)")
+          if val then
+            params[k] = val:match("^%s*(.-)%s*$")
+          end
+        end
+      end
+      return preset.key, params
+    end
+  end
+  return nil, nil
+end
+
+function M.preset_to_annotation(preset, params)
+  if not preset.has_params or not params or not next(params) then
+    return preset.annotation
+  end
+  local parts = {}
+  for k, v in pairs(params) do
+    table.insert(parts, k .. " = " .. v)
+  end
+  return preset.annotation .. "(" .. table.concat(parts, ", ") .. ")"
+end
+
 return M

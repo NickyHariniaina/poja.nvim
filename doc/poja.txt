@@ -23,10 +23,13 @@ COMMANDS                                        *poja-commands*
   templates matching HEI Admin API conventions.
 
 :PojaCreateAttribute                            *:PojaCreateAttribute*
-  Open a floating window to edit entity fields. The window shows each field
-  in the format:
-    name:Type:@Annotation1 @Annotation2(...)
-  Edit freely, then :w to write changes back to the source file.
+  Open a floating window with checkbox controls to edit entity field
+  annotations. Navigate fields with j/k, move between annotation presets
+  with h/l, toggle with Space or Enter, edit preset parameters with v,
+  save with :w, and close with q. Available presets:
+
+    NotNull  NotBlank  NotEmpty  Size(min,max)
+    Min      Max       Email     Pattern(regexp)
 
 ==============================================================================
 CONFIGURATION                                   *poja-config*
@@ -35,8 +38,6 @@ The plugin can be configured by calling setup() with an options table:
 
     require("poja").setup({
       detect = { enabled = true },
-      creator = { enabled = true },
-      ui = { enabled = true },
     })
 
 All options default to true. No configuration is required for basic usage.
