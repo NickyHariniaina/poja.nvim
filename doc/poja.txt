@@ -59,7 +59,19 @@ COMMANDS                                        *poja-commands*
        - OneToMany: field name, mappedBy, fetch
        - ManyToMany: field name, owning side (y/n), fetch, mappedBy (if
          inverse)
-  Missing imports (including the target entity) are automatically added.
+     Missing imports (including the target entity) are automatically added.
+
+:PojaCreateRepositoryMethod                     *:PojaCreateRepositoryMethod*
+  Add a query method to a repository interface. Invoke from a repository
+  file; the entity type is auto-detected from the JpaRepository
+  declaration and its fields are parsed for parameter type inference.
+  Flow:
+    1. Prefix: findBy / getBy / existsBy / countBy / deleteBy
+    2. Field name (e.g. "email")
+    3. More fields? (y/n) — chains methods as AndField
+    4. Method signature is auto-generated with correct return type and
+       parameter types, then inserted before the closing brace.
+  Imports (e.g. Optional) are added automatically.
 
 ==============================================================================
 CONFIGURATION                                   *poja-config*
