@@ -191,7 +191,7 @@ function M.preset_to_annotation(preset, params)
   for k, v in pairs(params) do
     if v ~= "" then
       if preset.string_params and preset.string_params[k] then
-        v = '"\\"' .. v .. '"\\"'
+        v = '"\\"' .. v .. '\\""'
       end
       table.insert(parts, k .. " = " .. v)
     end
